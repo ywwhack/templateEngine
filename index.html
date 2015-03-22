@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+<head>
+    <meta charset="utf-8" />
+    <title>template engine</title>
+    <script src="templateEngine.js"></script>
+</head>
+<body>
+    <script>
+        var str =
+                '<ul>' +
+                    '<% for(var i=0,len=names.length;i<len;i++){ %>'+
+                        '<li>{{ names[i] }}</li>'+
+                    '<% } %>'+
+                '</ul>'+
+                '<div>'+
+                    '{{ hobby }}'+
+                '</div>',
+
+            data = {
+                names:['zank', 'ywwhack'],
+                hobby:'coding'
+            },
+
+            template = TE.compile(str), //compile the origin string
+            html = template.render(data); //render data to template
+
+        console.log(html); //<ul><li>zank</li><li>ywwhack</li></ul><div>coding</div>
+    </script>
+</body>
+</html>
