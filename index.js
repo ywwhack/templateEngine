@@ -1,25 +1,26 @@
 var template = function(templateStr){
-    return function(locals){
-        var re = /<%([^%>]+)%>/g,
-            match = null,
-            buf = [],
-            start = 0,
-            end = 0,
-            result = '';
 
-        //buf.push(htmlPart)->buf.push(jsPart) for every loop
-        while(match = re.exec(templateStr)){
-            end = match.index;
-            buf.push("result+='"+templateStr.slice(start, end)+"';\r\n");
-            start = match.index+match[0].length;
-            if(templateStr[match.index+2] === '='){
-                buf.push("result+="+match[1].substr(1).trim()+";\r\n");
-            }else{
-                buf.push(match[1].trim()+"\r\n");
-            }
+    var re = /<%([^%>]+)%>/g,
+        match = null,
+        buf = [],
+        start = 0,
+        end = 0,
+        result = '';
+
+    //buf.push(htmlPart)->buf.push(jsPart) for every loop
+    while(match = re.exec(templateStr)){
+        end = match.index;
+        buf.push("result+='"+templateStr.slice(start, end)+"';\r\n");
+        start = match.index+match[0].length;
+        if(templateStr[match.index+2] === '='){
+            buf.push("result+="+match[1].substr(1).trim()+";\r\n");
+        }else{
+            buf.push(match[1].trim()+"\r\n");
         }
-        buf.push("result+='"+templateStr.slice(start)+"';\r\n"); //last part
+    }
+    buf.push("result+='"+templateStr.slice(start)+"';\r\n"); //last part
 
+    return function(locals){
         //translate variable to locals.varible
         var props = '',
             propRe = null,
@@ -32,6 +33,7 @@ var template = function(templateStr){
         str = buf.join("").replace(propRe, function(){
             return 'locals.'+arguments[0];
         });
+        
         eval(str); //execute the str
         return result;
     };
@@ -53,4 +55,3 @@ var data = {
     hobby:'coding'
 };
 console.log(template(str)(data)); //<ul><li>zank</li><li>ywwhack</li></ul><div>coding</div>
-
