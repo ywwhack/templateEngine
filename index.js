@@ -1,57 +1,56 @@
-var template = function(templateStr){
+/*
+* Usage:
+* <% some js sentence %> this part puts js sentence which will execute when render()
+* {{ some data }} this part puts data which will render to template when render()
+*
+* TE.compile() @params String -> return Object(template)
+* template.render() @params Object|JSON -> return String(actually the result html string)
+* */
 
-    var re = /<%([^%>]+)%>/g,
-        match = null,
-        buf = [],
-        start = 0,
-        end = 0,
-        result = '';
+(function(global){
+    var TE = global.TE = global.TE?global.TE:{};
 
-    //buf.push(htmlPart)->buf.push(jsPart) for every loop
-    while(match = re.exec(templateStr)){
-        end = match.index;
-        buf.push("result+='"+templateStr.slice(start, end)+"';\r\n");
-        start = match.index+match[0].length;
-        if(templateStr[match.index+2] === '='){
-            buf.push("result+="+match[1].substr(1).trim()+";\r\n");
-        }else{
-            buf.push(match[1].trim()+"\r\n");
+    TE.compile = function(templateStr){
+        var re = /(?:<%([^%>]+)%>)|(?:{{([^}]+)}})/g,
+            match = null,
+            buf = [],
+            start = 0,
+            end = 0,
+            result = '';
+
+        //buf.push(htmlPart)->buf.push(jsPart) for every loop
+        while(match = re.exec(templateStr)){
+            end = match.index;
+            buf.push("result+='"+templateStr.slice(start, end)+"';\r\n");
+            start = match.index+match[0].length;
+            if(match[2]!==undefined){
+                buf.push("result+="+match[2].trim()+";\r\n");
+            }else{
+                buf.push(match[1].trim()+"\r\n");
+            }
         }
-    }
-    buf.push("result+='"+templateStr.slice(start)+"';\r\n"); //last part
+        buf.push("result+='"+templateStr.slice(start)+"';\r\n"); //last part
 
-    return function(locals){
-        //translate variable to locals.varible
-        var props = '',
-            propRe = null,
-            str;
-        for(var i in locals){
-            props += i+'|';
+        function render(locals){
+            //translate variable to locals.varible
+            var props = '',
+                propRe = null,
+                str;
+            for(var i in locals){
+                props += i+'|';
+            }
+            props = props.slice(0, -1);
+            propRe = new RegExp(props, 'g');
+            str = buf.join("").replace(propRe, function(){
+                return 'locals.'+arguments[0];
+            });
+
+            eval(str); //execute the str
+            return result;
         }
-        props = props.slice(0, -1);
-        propRe = new RegExp(props, 'g');
-        str = buf.join("").replace(propRe, function(){
-            return 'locals.'+arguments[0];
-        });
-        
-        eval(str); //execute the str
-        return result;
+
+        return {
+            render:render
+        }
     };
-};
-
-//example
-var str =
-    '<ul>' +
-        '<% for(var i=0,len=names.length;i<len;i++){ %>'+
-            '<li><%= names[i] %></li>'+
-        '<% } %>'+
-    '</ul>'+
-    '<div>'+
-        '<%= hobby %>'+
-    '</div>';
-
-var data = {
-    names:['zank', 'ywwhack'],
-    hobby:'coding'
-};
-console.log(template(str)(data)); //<ul><li>zank</li><li>ywwhack</li></ul><div>coding</div>
+})(window);
